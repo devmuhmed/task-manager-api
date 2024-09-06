@@ -18,6 +18,8 @@ class TaskRequest extends FormRequest
             'status' => 'required|string|'.Rule::in(TaskStatusEnum::values()),
             'priority' => 'required|string|'.Rule::in(TaskPriorityEnum::values()),
             'category_id' => 'required|exists:categories,id',
+            'assigned_to' => 'sometimes|array',
+            'assigned_to.*' => 'exists:users,id',
         ];
 
         if ($this->isMethod('put')) {
