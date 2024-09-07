@@ -65,3 +65,7 @@ public function changePriority($id, $data)
         return $task;
     }
 ```
+I'm using Spatie Enum to make the code clean and readable and make the code more maintainable
+```php
+TaskPriorityEnum::values()
+```
