@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Services;
 
 use App\Models\Task;
 
-class TaskRepository implements TaskRepositoryInterface
+class TaskService
 {
     public function all()
     {
@@ -24,6 +24,9 @@ class TaskRepository implements TaskRepositoryInterface
     public function update($id, array $data)
     {
         $task = $this->find($id);
+        if ($task->user_id != auth()->id() && !$task->assignedUsers->contains(auth()->id())) {
+            abort(403, 'Unauthorized action.');
+        }
         $task->update($data);
         return $task;
     }
@@ -53,4 +56,17 @@ class TaskRepository implements TaskRepositoryInterface
     {
         return Task::filter($filters)->paginate(10);
     }
+
+    public function changePriority($id, $data)
+    {
+        $task = $this->find($id);
+        if ($task->user_id != auth()->id() && !$task->assignedUsers->contains(auth()->id())) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $task->update(['priority' => $data['priority']]);
+
+        return $task;
+    }
+
 }

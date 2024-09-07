@@ -2,30 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TaskPriorityEnum;
+use App\Http\Requests\ChangePriorityRequest;
 use App\Http\Requests\TaskRequest;
 use App\Http\Resources\TaskResource;
-use App\Repositories\CategoryRepository;
-use App\Repositories\TaskRepository;
+use App\Services\CategoryService;
+use App\Services\TaskService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
-
 class TaskController extends Controller
 {
-    private $taskRepository;
-    private $categoryRepository;
+    private $taskService;
+    private $categoryService;
 
 
-    public function __construct(TaskRepository $taskRepository, CategoryRepository $categoryRepository)
+    public function __construct(TaskService $taskService, CategoryService $categoryService)
     {
-        $this->taskRepository = $taskRepository;
-        $this->categoryRepository = $categoryRepository;
+        $this->taskService = $taskService;
+        $this->categoryService = $categoryService;
     }
 
     public function index(Request $request)
     {
-        $tasks = $this->taskRepository->filter($request->all());
+        $tasks = $this->taskService->filter($request->all());
         return TaskResource::collection($tasks);
     }
 
@@ -34,7 +32,7 @@ class TaskController extends Controller
         $validated = $request->validated();
         $assignedTo = Arr::pull($validated,'assigned_to');
 
-        $task = $this->taskRepository->create($validated + ['created_by' => auth()->id()]);
+        $task = $this->taskService->create($validated + ['created_by' => auth()->id()]);
 
         $task->assignedUsers()->sync($assignedTo);
         return new TaskResource($task);
@@ -42,7 +40,7 @@ class TaskController extends Controller
 
     public function show($id)
     {
-        $task = $this->taskRepository->find($id);
+        $task = $this->taskService->find($id);
         return new TaskResource($task);
     }
 
@@ -50,7 +48,7 @@ class TaskController extends Controller
     {
         $validated = $request->validated();
         $assignedTo = Arr::pull($validated,'assigned_to');
-        $task = $this->taskRepository->update($id, $validated);
+        $task = $this->taskService->update($id, $validated);
 
         if($assignedTo){
             $task->assignedUsers()->sync($assignedTo);
@@ -60,18 +58,13 @@ class TaskController extends Controller
 
     public function destroy($id)
     {
-        $this->taskRepository->delete($id);
+        $this->taskService->delete($id);
         return response()->json(['message' => 'Task deleted successfully.']);
     }
 
-    public function changePriority(Request $request, $id)
+    public function changePriority(ChangePriorityRequest $request, $id)
     {
-        $validated = $request->validate([
-            'priority' => 'required|'.Rule::in(TaskPriorityEnum::values())
-        ]);
-        $task = $this->taskRepository->find($id);
-        $task->priority = $validated['priority'];
-        $task->save();
+        $task = $this->taskService->changePriority($id, $request->validated());
         return new TaskResource($task);
     }
 }

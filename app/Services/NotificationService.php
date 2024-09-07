@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Services;
 
 use App\Models\Notification;
 
-class NotificationRepository
+class NotificationService
 {
     public function create(array $data)
     {

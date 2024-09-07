@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Services;
 
 use App\Models\Category;
 
-class CategoryRepository implements CategoryRepositoryInterface
+class CategoryService
 {
     public function all()
     {
